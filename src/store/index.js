@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import { ipcRenderer } from 'electron'
+import moment from 'moment'
 
 Vue.use(Vuex)
 
@@ -55,7 +56,7 @@ export default new Vuex.Store({
           const indexFound = state.selectedVideos.findIndex(obj => obj.id === id)
           if (indexFound !== null && indexFound >= 0) {
             videoObj.isLoading = true
-            const percentage = (videoObj.currentFps / videoObj.frames) * 100
+            const percentage = `${100 - (moment.duration(videoObj.timemark).asMilliseconds() / (videoObj.format.duration * 10))}`
             if (percentage > 0) videoObj.percentage = percentage
             if (percentage >= 100) videoObj.isConverted = true
 

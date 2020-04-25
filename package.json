@@ -15,6 +15,7 @@
     "@mdi/font": "^3.6.95",
     "core-js": "^3.6.4",
     "fluent-ffmpeg": "^2.1.2",
+    "moment": "^2.24.0",
     "node-loader": "^0.6.0",
     "roboto-fontface": "*",
     "uuid": "^7.0.3",
