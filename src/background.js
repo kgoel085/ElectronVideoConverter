@@ -1,10 +1,10 @@
 'use strict'
-
-import { app, protocol, BrowserWindow } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain } from 'electron'
 import {
   createProtocol
   /* install Vue Dev tools */
 } from 'vue-cli-plugin-electron-builder/lib'
+import ffmpeg from 'fluent-ffmpeg'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -20,7 +20,8 @@ function createWindow () {
     width: 800,
     height: 600,
     webPreferences: {
-      nodeIntegration: true
+      nodeIntegration: true,
+      backgroundThrottling: false
     }
   })
 
@@ -60,6 +61,7 @@ app.on('activate', () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
+  process.env['FLUENTFFMPEG_COV'] = false
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools
     // Devtools extensions are broken in Electron 6.0.0 and greater
@@ -75,6 +77,42 @@ app.on('ready', async () => {
 
   }
   createWindow()
+})
+
+// Fetch file details from ffmpeg
+ipcMain.on('file:getDetails', (event, files) => {
+  if (files && files.constructor === Array && files.length > 0) {
+    const promiseArr = files.map(file => {
+      return new Promise((resolve, reject) => {
+        ffmpeg.ffprobe(file.path, (err, data) => {
+          if (err) return reject(err)
+
+          const { format } = data // Only send format details
+          return resolve({ ...file, format })
+        })
+      })
+    })
+
+    Promise.all(promiseArr)
+      .then(data => win.webContents.send('file:retrieveDetails', data))
+      .catch(err => console.log(err))
+  }
+})
+
+// Start the convert  progress
+ipcMain.on('file:convert', (event, files) => {
+  if (files && files.constructor === Array && files.length > 0) {
+    files.forEach(file => {
+      const outputName = file.path.split('.')[0]
+      const outputPath = `${outputName}.${file.convertTo}`
+
+      ffmpeg(file.path)
+        .output(outputPath)
+        .on('progress', (event) => win.webContents.send('conversion:progress', { ...file, ...event }))
+        .on('end', (event) => win.webContents.send('conversion:end', { ...file, isConverted: true }))
+        .run()
+    })
+  }
 })
 
 // Exit cleanly on request from parent process in development mode.

@@ -1,18 +1,32 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
+  <v-layout row wrap>
+    <!-- Drop zone object -->
+    <v-flex xs12>
+      <DropZone></DropZone>
+    </v-flex>
+
+    <!-- Selected videos listing -->
+    <v-flex xs12>
+      <VideoListing></VideoListing>
+    </v-flex>
+  </v-layout>
 </template>
 
 <script>
-// @ is an alias to /src
-import HelloWorld from '@/components/HelloWorld.vue'
+const DropZone = () => import('@/components/dropZone.vue')
+const VideoListing = () => import('@/components/listVideos.vue')
 
 export default {
-  name: 'Home',
+  data: () => ({
+
+  }),
   components: {
-    HelloWorld
+    DropZone,
+    VideoListing
   }
 }
 </script>
+
+<style>
+
+</style>
